@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The goal of the recommender system is to suggest some movies to the user based on users features and favorite movies. We can approach this problem as a top-$k$ recommendation task, where model will recommend $k$ movies for the user and recommendations will be sorted by score. Since we have data about time (timestamps in seconds) in our interactions dataset (`u.data`) we can use *collaborative filtering* (presented below). As a subdirection, I choosed model-based approach.
+The goal of the recommender system is to suggest some movies to the user based on users features and favorite movies. We can approach this problem as a top-`k` recommendation task, where model will recommend `k` movies for the user and recommendations will be sorted by score. Since we have data about time (timestamps in seconds) in our interactions dataset (`u.data`) we can use *collaborative filtering* (presented below). As a subdirection, I choosed model-based approach.
 
 ![Collaborative filtering](https://miro.medium.com/v2/resize:fit:4800/format:webp/0*2huiFTsBStKKkaWb.png)
 
@@ -13,7 +13,7 @@ In this assignment, I used [recently released by MTS the RecTools framework](htt
 ## Data analysis
 
 First, splits of the data given (`u1-u5`, `ua`, `ub`) are divided by date, so that we have past interactions in the train set and current iterations in the test set.
-Second, I made the Exploratory Data Analysis ([notebook](../notebooks/1.0-eda.ipynb)) and found the following insights:
+Second, I made the Exploratory Data Analysis ([notebook](/notebooks/1.0-eda.ipynb)) and found the following insights:
 - Average rating score is 3.52
 - Top 1 genre is Comedy (30% of movies)
 - Least popular genre is Fantasy (1.3% of movies)
@@ -27,7 +27,7 @@ These analysis results are used in the next step, data preprocessing.
 
 ## Data preprocessing
 
-Considerable amount of time were spent on this stage (notebook). I converted the given data into RecTools [dataset format](https://rectools.readthedocs.io/en/stable/api/rectools.dataset.dataset.Dataset.html#rectools.dataset.dataset.Dataset). I also used `pandas` library on this stage to work with dataframes. The given `u1-u5` data splits were used for cross-validation, so I stored files into `data/interim/` directory. For the test data, I decided to use `ua` and `ub` splits and stored them into `benchmark/data/` folder to access them on the evaluation stage. The processing was the following:
+Considerable amount of time were spent on this stage ([notebook](/notebooks/1.1-data-preprocessing.ipynb)). I converted the given data into RecTools [dataset format](https://rectools.readthedocs.io/en/stable/api/rectools.dataset.dataset.Dataset.html#rectools.dataset.dataset.Dataset). I also used `pandas` library on this stage to work with dataframes. The given `u1-u5` data splits were used for cross-validation, so I stored files into `data/interim/` directory. For the test data, I decided to use `ua` and `ub` splits and stored them into `benchmark/data/` folder to access them on the evaluation stage. The processing was the following:
 
 ### User features
 
@@ -91,13 +91,13 @@ On this stage, I used training process suggested by RecTools ([notebook](/notebo
 ## Evaluation
 
 I computed Classification and Ranking metrics [implemeted in RecTools](https://rectools.readthedocs.io/en/stable/api/rectools.metrics.html), namely:
-- F1Beta
-- Mean Average Precision (MAP)
-- Mean Reciprocal Rank (MRR)
+- F1Beta — F-score for k first recommendations
+- Mean Average Precision (MAP) — takes mean value of precision of recommendations taking into account their order
+- Mean Reciprocal Rank (MRR) — takes mean value of relevance of recommendations taking in account their order.
 
-I also added for the interest these metrics:
-- Mean Inverse User Frequency (Novelty)
-- Serendipity (Novelty + Relevance)
+By the inspiration of [medium article](https://gab41.lab41.org/recommender-systems-its-not-all-about-the-accuracy-562c7dceeaff) I also added for the interest these metrics:
+- Mean Inverse User Frequency (Novelty) — How surprising are the recommendations in general?
+- Serendipity (Novelty + Relevance) — How surprising are the relevant recommendations?
 
 For all metrics, diffrent $k=[1, 5, 10]$ were used ([notebook](/notebooks/3.0-evaluation.ipynb)). The choice of metrics also inspired by [this article](https://neptune.ai/blog/recommender-systems-metrics) and [this notebook](https://github.com/MobileTeleSystems/RecTools/blob/main/examples/5_benchmark_iALS_with_features.ipynb).
 
