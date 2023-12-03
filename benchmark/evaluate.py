@@ -1,19 +1,25 @@
 import argparse
 import pickle
 from rectools.metrics.scoring import calc_metrics
-from rectools.metrics import F1Beta, NDCG, MAP, MRR, Serendipity
+from rectools.metrics import F1Beta, MeanInvUserFreq, MAP, MRR, Serendipity
 from rectools import Columns
 from tabulate import tabulate
 
 
 K = 10
-METRICS = {
-    f'F1Beta@{K}': F1Beta(k=K),  # Classification
-    f'NDCG@{K}': NDCG(k=K, log_base=3),  # Ranking
-    f'MAP@{K}': MAP(k=K),  # Ranking
-    f'MRR@{K}': MRR(k=K),  # Ranking
-    f'Serendipity@{K}': Serendipity(k=K),  # Serendipity: novelty and relevance together
+
+METRICS_NAME = {
+    'F1Beta': F1Beta,
+    'MRR': MRR,
+    'MAP': MAP,
+    'Novelty': MeanInvUserFreq,
+    'Serendipity': Serendipity
 }
+METRICS = {}
+for metric_name, metric in METRICS_NAME.items():
+    for k in (1, 5, 10):
+        METRICS[f'{metric_name}@{k}'] = metric(k=k)
+
 TEST_DATA_DIR = './data/'
 DATA_FILENAMES = [f'u{t}.{split}' for t in ['a', 'b'] for split in ['base', 'test']]
 DATA = {}

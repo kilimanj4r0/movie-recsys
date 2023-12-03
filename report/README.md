@@ -2,9 +2,13 @@
 
 ## Introduction
 
-The goal of the recommender system is to suggest some movies to the user based on users features and favorite movies. We can approach this problem as a top-$k$ recommendation task, where model will recommend $k$ movies for the user and recommendations will be sorted by score. Since we have data about time (timestamps in seconds) in our interactions dataset (`u.data`) we can use collaborative filtering. As a subdirection, I choosed model-based approach.
+The goal of the recommender system is to suggest some movies to the user based on users features and favorite movies. We can approach this problem as a top-$k$ recommendation task, where model will recommend $k$ movies for the user and recommendations will be sorted by score. Since we have data about time (timestamps in seconds) in our interactions dataset (`u.data`) we can use *collaborative filtering* (presented below). As a subdirection, I choosed model-based approach.
+
+![Collaborative filtering](https://miro.medium.com/v2/resize:fit:4800/format:webp/0*2huiFTsBStKKkaWb.png)
 
 In this assignment, I used [recently released by MTS the RecTools framework](https://habr.com/ru/articles/773126/) to build a solution.
+
+![RecTools escription](https://habrastorage.org/r/w1560/getpro/habr/upload_files/1b7/2c3/e52/1b72c3e52e5ec0a878cda42098bac20a.png)
 
 ## Data analysis
 
@@ -48,7 +52,7 @@ As a result, I saved both RecTools datasets and dataframes to load them for trai
 
 ## Model Implementation
 
-I implemented 5-fold cross-validation on the `u1-u5` dataset splits to choose the best model. The choosing criteria was Root Mean Squared Error (RMSE) between predicted and test rating score. I have used implementation of the following models in RecTools:
+I implemented 5-fold cross-validation on the `u1-u5` dataset splits to choose the best model ([notebook](/notebooks/2.1-train-cross-val.ipynb)). The choosing criteria was Root Mean Squared Error (RMSE) between predicted and test rating score. I have used implementation of the following models in RecTools:
 - `PureSVDModel` (utilizes Singular Value Decomposition for matrix factorization to recommend top-k items)
 - `ImplicitALSWrapperModel` (the wrapper of `AlternatingLeastSquares` collaborative filtering model using implicit feedback, recommending top-k items) with `10` sized factors vector for `K=10`
 - `LightFMWrapperModel` (the wrapper of `LightFM` hybrid model combining collaborative and content-based signals to recommend top-k items) with `10` sized factors vector for `K=10`
@@ -60,8 +64,7 @@ Averaging RMSE across all folds for each model, give the following results:
 |`ImplicitALSWrapperModel`|2.4058378050082134|
 |`LightFMWrapperModel`|29.475618221101787|
 
-So, attempt to use hybrid model was unsuccessful. `AlternatingLeastSquares` was really close to `PureSVDModel` but still worse. Therefore, I choosed `PureSVDModel` as the best one. 
-
+So, attempt to use hybrid model was unsuccessful. `AlternatingLeastSquares` was really close to `PureSVDModel` but still worse. Although `AlternatingLeastSquares` are more used in practice, I choosed `PureSVDModel` as the best one. 
 
 ## Model Advantages and Disadvantages
 
@@ -69,50 +72,56 @@ The `PureSVDModel` has the following advantages and disadvantages:
 
 ### Pros:
 
-- Simplicity and efficiency
+- Simple and clear
 - Straightforward due to singular value decomposition (SVD)
 - Handles Cold Start problem
-- Interpretable reommendations
 - Performs good for dense data
 
 ### Cons:
-
+- Interpretable reommendations
 - Limited to Matrix Factorization
 - Treats all users and items equally
 - Have Cold Start problem for new items:
 - Sensitive to sparse data:
 
 ## Training Process
-...
+
+On this stage, I used training process suggested by RecTools ([notebook](/notebooks/3.0-evaluation.ipynb)). First, the `PureSVDModel` model was fitted (`fit()` method) on the train (`base` in our case) split of the dataset. Next, to build recommendations table for `k=10` recommendations per used the `recommend()` method was used. After, for cross-validation the RMSE was computed between predicted and test rating score, while for evaluation the recommendations metrics were computed (described in the next step).
+
 ## Evaluation
 
-Fold a:
-|     Metric     |        Value         |
-|----------------|----------------------|
-|   F1Beta@10    | 0.24284199363732767  |
-|    NDCG@10     |  0.2851740747159939  |
-|     MRR@10     |  0.6133220555808042  |
-|     MAP@10     |  0.1495090811156559  |
-| Serendipity@10 | 0.005997134272584964 |
-|----------------|----------------------|
+I computed Classification and Ranking metrics [implemeted in RecTools](https://rectools.readthedocs.io/en/stable/api/rectools.metrics.html), namely:
+- F1Beta
+- Mean Average Precision (MAP)
+- Mean Reciprocal Rank (MRR)
 
-Fold b:
-|     Metric     |        Value        |
-|----------------|---------------------|
-|   F1Beta@10    | 0.23160127253446447 |
-|    NDCG@10     | 0.27318164556889707 |
-|     MRR@10     | 0.5927128044572371  |
-|     MAP@10     | 0.14198854550657308 |
-| Serendipity@10 | 0.00599344739716054 |
+I also added for the interest these metrics:
+- Mean Inverse User Frequency (Novelty)
+- Serendipity (Novelty + Relevance)
 
-Average across test folds:
-|     Metric     |        Value         |
-|----------------|----------------------|
-|   F1Beta@10    | 0.23722163308589606  |
-|    NDCG@10     |  0.2791778601424455  |
-|     MAP@10     |  0.1457488133111145  |
-|     MRR@10     |  0.6030174300190206  |
-| Serendipity@10 | 0.005995290834872752 |
+For all metrics, diffrent $k=[1, 5, 10]$ were used ([notebook](/notebooks/3.0-evaluation.ipynb)). The choice of metrics also inspired by [this article](https://neptune.ai/blog/recommender-systems-metrics) and [this notebook](https://github.com/MobileTeleSystems/RecTools/blob/main/examples/5_benchmark_iALS_with_features.ipynb).
 
 ## Results
-...
+
+The `PureSVDModel` evaluation results on the data splits `ua` and `ub` are presented here:
+
+| Metric           | Fold `a`                 | Fold `b`                 | Average  |
+|------------------|------------------------|------------------------|------------------------|
+| F1Beta@1         | 0.0825                 | 0.0812                 | 0.0825                 |
+| F1Beta@5         | 0.2054                 | 0.1996                 | 0.2054                 |
+| F1Beta@10        | 0.2372                 | 0.2316                 | 0.2372                 |
+| MRR@1            | 0.4539                 | 0.4464                 | 0.4539                 |
+| MRR@5            | 0.5888                 | 0.5773                 | 0.5888                 |
+| MRR@10           | 0.6030                 | 0.5927                 | 0.6030                 |
+| MAP@1            | 0.0454                 | 0.0446                 | 0.0454                 |
+| MAP@5            | 0.1134                 | 0.1106                 | 0.1134                 |
+| MAP@10           | 0.1457                 | 0.1420                 | 0.1457                 |
+| Novelty@1        | 1.6174                 | 1.6123                 | 1.6174                 |
+| Novelty@5        | 1.8300                 | 1.8311                 | 1.8300                 |
+| Novelty@10       | 1.9767                 | 1.9755                 | 1.9767                 |
+| Serendipity@1    | 0.0066                 | 0.0064                 | 0.0066                 |
+| Serendipity@5    | 0.0065                 | 0.0065                 | 0.0065                 |
+| Serendipity@10   | 0.0060                 | 0.0060                 | 0.0060                 |
+
+I also averaged the results (last column) to get the whole picture.
+
