@@ -1,0 +1,6 @@
+pandas
+numpy
+rectools
+lightfm
+tabulate
+scikit-learn
